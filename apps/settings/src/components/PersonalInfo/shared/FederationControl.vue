@@ -17,6 +17,7 @@
 	-
 	- You should have received a copy of the GNU Affero General Public License
 	- along with this program. If not, see <http://www.gnu.org/licenses/>.
+	-
 -->
 
 <template>
@@ -27,14 +28,15 @@
 		:disabled="disabled">
 		<ActionButton v-for="federationScope in federationScopes"
 			:key="federationScope.name"
-			:aria-label="federationScope.tooltip"
+			:aria-label="!supportedScopes.includes(federationScope.name) ? federationScope.tooltipDisabled : federationScope.tooltip"
 			class="federation-actions__btn"
 			:class="{ 'federation-actions__btn--active': scope === federationScope.name }"
 			:close-after-click="true"
+			:disabled="!supportedScopes.includes(federationScope.name)"
 			:icon="federationScope.iconClass"
 			:title="federationScope.displayName"
 			@click.stop.prevent="changeScope(federationScope.name)">
-			{{ federationScope.tooltip }}
+			{{ !supportedScopes.includes(federationScope.name) ? federationScope.tooltipDisabled : federationScope.tooltip }}
 		</ActionButton>
 	</Actions>
 </template>
@@ -45,7 +47,8 @@ import ActionButton from '@nextcloud/vue/dist/Components/ActionButton'
 import { loadState } from '@nextcloud/initial-state'
 import { showError } from '@nextcloud/dialogs'
 
-import { ACCOUNT_PROPERTY_READABLE_ENUM, PROPERTY_READABLE_SUPPORTED_SCOPES_ENUM, SCOPE_ENUM, SCOPE_PROPERTY_ENUM } from '../../../constants/AccountPropertyConstants'
+import { ACCOUNT_PROPERTY_READABLE_ENUM, PROPERTY_READABLE_KEYS_ENUM, PROPERTY_READABLE_SUPPORTED_SCOPES_ENUM, SCOPE_ENUM, SCOPE_PROPERTY_ENUM } from '../../../constants/AccountPropertyConstants'
+import { savePrimaryAccountPropertyScope } from '../../../service/PersonalInfo/PersonalInfoService'
 
 const { lookupServerUploadEnabled } = loadState('settings', 'accountParameters', {})
 
@@ -75,9 +78,9 @@ export default {
 			type: Boolean,
 			default: false,
 		},
-		handleScopeChange: {
+		handleAdditionalScopeChange: {
 			type: Function,
-			required: true,
+			default: null,
 		},
 		scope: {
 			type: String,
@@ -94,15 +97,15 @@ export default {
 
 	computed: {
 		ariaLabel() {
-			return t('settings', 'Change privacy level of {accountProperty}', { accountProperty: this.accountPropertyLowerCase })
-		},
-
-		federationScopes() {
-			return Object.values(SCOPE_PROPERTY_ENUM).filter(({ name }) => this.supportedScopes.includes(name))
+			return t('settings', 'Change scope level of {accountProperty}', { accountProperty: this.accountPropertyLowerCase })
 		},
 
 		scopeIcon() {
 			return SCOPE_PROPERTY_ENUM[this.scope].iconClass
+		},
+
+		federationScopes() {
+			return Object.values(SCOPE_PROPERTY_ENUM)
 		},
 
 		supportedScopes() {
@@ -131,7 +134,7 @@ export default {
 
 		async updatePrimaryScope(scope) {
 			try {
-				const responseData = await this.handleScopeChange(scope)
+				const responseData = await savePrimaryAccountPropertyScope(PROPERTY_READABLE_KEYS_ENUM[this.accountProperty], scope)
 				this.handleResponse({
 					scope,
 					status: responseData.ocs?.meta?.status,
@@ -146,7 +149,7 @@ export default {
 
 		async updateAdditionalScope(scope) {
 			try {
-				const responseData = await this.handleScopeChange(this.additionalValue, scope)
+				const responseData = await this.handleAdditionalScopeChange(this.additionalValue, scope)
 				this.handleResponse({
 					scope,
 					status: responseData.ocs?.meta?.status,

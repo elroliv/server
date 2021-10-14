@@ -24,52 +24,48 @@
 	<section>
 		<HeaderBar
 			:account-property="accountProperty"
-			label-for="language" />
+			label-for="headline"
+			:scope.sync="primaryHeadline.scope" />
 
-		<template v-if="isEditable">
-			<Language
-				:common-languages="commonLanguages"
-				:other-languages="otherLanguages"
-				:language.sync="language" />
-		</template>
+		<Headline
+			:headline.sync="primaryHeadline.value"
+			:scope.sync="primaryHeadline.scope" />
 
-		<span v-else>
-			{{ t('settings', 'No language set') }}
-		</span>
+		<VisibilityDropdown
+			:param-id="accountPropertyId"
+			:display-id="accountProperty"
+			:visibility.sync="visibility" />
 	</section>
 </template>
 
 <script>
 import { loadState } from '@nextcloud/initial-state'
 
-import Language from './Language'
+import Headline from './Headline'
 import HeaderBar from '../shared/HeaderBar'
+import VisibilityDropdown from '../shared/VisibilityDropdown'
 
-import { ACCOUNT_SETTING_PROPERTY_READABLE_ENUM } from '../../../constants/AccountPropertyConstants'
+import { ACCOUNT_PROPERTY_ENUM, ACCOUNT_PROPERTY_READABLE_ENUM } from '../../../constants/AccountPropertyConstants'
 
-const { languageMap: { activeLanguage, commonLanguages, otherLanguages } } = loadState('settings', 'personalInfoParameters', {})
+const { headlineMap: { primaryHeadline } } = loadState('settings', 'personalInfoParameters', {})
+const { profileConfig: { headline: { visibility } } } = loadState('settings', 'profileParameters', {})
 
 export default {
-	name: 'LanguageSection',
+	name: 'HeadlineSection',
 
 	components: {
-		Language,
+		Headline,
 		HeaderBar,
+		VisibilityDropdown,
 	},
 
 	data() {
 		return {
-			accountProperty: ACCOUNT_SETTING_PROPERTY_READABLE_ENUM.LANGUAGE,
-			commonLanguages,
-			otherLanguages,
-			language: activeLanguage,
+			accountProperty: ACCOUNT_PROPERTY_READABLE_ENUM.HEADLINE,
+			accountPropertyId: ACCOUNT_PROPERTY_ENUM.HEADLINE,
+			primaryHeadline,
+			visibility,
 		}
-	},
-
-	computed: {
-		isEditable() {
-			return Boolean(this.language)
-		},
 	},
 }
 </script>

@@ -21,18 +21,18 @@
 -->
 
 <template>
-	<div class="displayname">
+	<div class="organisation">
 		<input
-			id="displayname"
+			id="organisation"
 			type="text"
-			:placeholder="t('settings', 'Your full name')"
-			:value="displayName"
+			:placeholder="t('settings', 'Your organisation')"
+			:value="organisation"
 			autocapitalize="none"
 			autocomplete="on"
 			autocorrect="off"
-			@input="onDisplayNameChange">
+			@input="onOrganisationChange">
 
-		<div class="displayname__actions-container">
+		<div class="organisation__actions-container">
 			<transition name="fade">
 				<span v-if="showCheckmarkIcon" class="icon-checkmark" />
 				<span v-else-if="showErrorIcon" class="icon-error" />
@@ -48,15 +48,12 @@ import debounce from 'debounce'
 
 import { ACCOUNT_PROPERTY_ENUM } from '../../../constants/AccountPropertyConstants'
 import { savePrimaryAccountProperty } from '../../../service/PersonalInfo/PersonalInfoService'
-import { validateStringInput } from '../../../utils/validate'
-
-// TODO Global avatar updating on events (e.g. updating the displayname) is currently being handled by global js, investigate using https://github.com/nextcloud/nextcloud-event-bus for global avatar updating
 
 export default {
-	name: 'DisplayName',
+	name: 'Organisation',
 
 	props: {
-		displayName: {
+		organisation: {
 			type: String,
 			required: true,
 		},
@@ -68,7 +65,7 @@ export default {
 
 	data() {
 		return {
-			initialDisplayName: this.displayName,
+			initialOrganisation: this.organisation,
 			localScope: this.scope,
 			showCheckmarkIcon: false,
 			showErrorIcon: false,
@@ -76,37 +73,35 @@ export default {
 	},
 
 	methods: {
-		onDisplayNameChange(e) {
-			this.$emit('update:display-name', e.target.value)
-			this.debounceDisplayNameChange(e.target.value.trim())
+		onOrganisationChange(e) {
+			this.$emit('update:organisation', e.target.value)
+			this.debounceOrganisationChange(e.target.value.trim())
 		},
 
-		debounceDisplayNameChange: debounce(async function(displayName) {
-			if (validateStringInput(displayName)) {
-				await this.updatePrimaryDisplayName(displayName)
-			}
+		debounceOrganisationChange: debounce(async function(organisation) {
+			await this.updatePrimaryOrganisation(organisation)
 		}, 500),
 
-		async updatePrimaryDisplayName(displayName) {
+		async updatePrimaryOrganisation(organisation) {
 			try {
-				const responseData = await savePrimaryAccountProperty(ACCOUNT_PROPERTY_ENUM.DISPLAYNAME, displayName)
+				const responseData = await savePrimaryAccountProperty(ACCOUNT_PROPERTY_ENUM.ORGANISATION, organisation)
 				this.handleResponse({
-					displayName,
+					organisation,
 					status: responseData.ocs?.meta?.status,
 				})
 			} catch (e) {
 				this.handleResponse({
-					errorMessage: t('settings', 'Unable to update full name'),
+					errorMessage: t('settings', 'Unable to update organisation'),
 					error: e,
 				})
 			}
 		},
 
-		handleResponse({ displayName, status, errorMessage, error }) {
+		handleResponse({ organisation, status, errorMessage, error }) {
 			if (status === 'ok') {
 				// Ensure that local state reflects server state
-				this.initialDisplayName = displayName
-				emit('settings:display-name:updated', displayName)
+				this.initialOrganisation = organisation
+				emit('settings:organisation:updated', organisation)
 				this.showCheckmarkIcon = true
 				setTimeout(() => { this.showCheckmarkIcon = false }, 2000)
 			} else {
@@ -125,7 +120,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.displayname {
+.organisation {
 	display: grid;
 	align-items: center;
 
@@ -143,7 +138,7 @@ export default {
 		cursor: text;
 	}
 
-	.displayname__actions-container {
+	.organisation__actions-container {
 		grid-area: 1 / 1;
 		justify-self: flex-end;
 		height: 30px;

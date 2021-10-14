@@ -21,18 +21,18 @@
 -->
 
 <template>
-	<div class="displayname">
+	<div class="headline">
 		<input
-			id="displayname"
+			id="headline"
 			type="text"
-			:placeholder="t('settings', 'Your full name')"
-			:value="displayName"
+			:placeholder="t('settings', 'Your headline')"
+			:value="headline"
 			autocapitalize="none"
 			autocomplete="on"
 			autocorrect="off"
-			@input="onDisplayNameChange">
+			@input="onHeadlineChange">
 
-		<div class="displayname__actions-container">
+		<div class="headline__actions-container">
 			<transition name="fade">
 				<span v-if="showCheckmarkIcon" class="icon-checkmark" />
 				<span v-else-if="showErrorIcon" class="icon-error" />
@@ -48,15 +48,12 @@ import debounce from 'debounce'
 
 import { ACCOUNT_PROPERTY_ENUM } from '../../../constants/AccountPropertyConstants'
 import { savePrimaryAccountProperty } from '../../../service/PersonalInfo/PersonalInfoService'
-import { validateStringInput } from '../../../utils/validate'
-
-// TODO Global avatar updating on events (e.g. updating the displayname) is currently being handled by global js, investigate using https://github.com/nextcloud/nextcloud-event-bus for global avatar updating
 
 export default {
-	name: 'DisplayName',
+	name: 'Headline',
 
 	props: {
-		displayName: {
+		headline: {
 			type: String,
 			required: true,
 		},
@@ -68,7 +65,7 @@ export default {
 
 	data() {
 		return {
-			initialDisplayName: this.displayName,
+			initialHeadline: this.headline,
 			localScope: this.scope,
 			showCheckmarkIcon: false,
 			showErrorIcon: false,
@@ -76,37 +73,35 @@ export default {
 	},
 
 	methods: {
-		onDisplayNameChange(e) {
-			this.$emit('update:display-name', e.target.value)
-			this.debounceDisplayNameChange(e.target.value.trim())
+		onHeadlineChange(e) {
+			this.$emit('update:headline', e.target.value)
+			this.debounceHeadlineChange(e.target.value.trim())
 		},
 
-		debounceDisplayNameChange: debounce(async function(displayName) {
-			if (validateStringInput(displayName)) {
-				await this.updatePrimaryDisplayName(displayName)
-			}
+		debounceHeadlineChange: debounce(async function(headline) {
+			await this.updatePrimaryHeadline(headline)
 		}, 500),
 
-		async updatePrimaryDisplayName(displayName) {
+		async updatePrimaryHeadline(headline) {
 			try {
-				const responseData = await savePrimaryAccountProperty(ACCOUNT_PROPERTY_ENUM.DISPLAYNAME, displayName)
+				const responseData = await savePrimaryAccountProperty(ACCOUNT_PROPERTY_ENUM.HEADLINE, headline)
 				this.handleResponse({
-					displayName,
+					headline,
 					status: responseData.ocs?.meta?.status,
 				})
 			} catch (e) {
 				this.handleResponse({
-					errorMessage: t('settings', 'Unable to update full name'),
+					errorMessage: t('settings', 'Unable to update headline'),
 					error: e,
 				})
 			}
 		},
 
-		handleResponse({ displayName, status, errorMessage, error }) {
+		handleResponse({ headline, status, errorMessage, error }) {
 			if (status === 'ok') {
 				// Ensure that local state reflects server state
-				this.initialDisplayName = displayName
-				emit('settings:display-name:updated', displayName)
+				this.initialHeadline = headline
+				emit('settings:headline:updated', headline)
 				this.showCheckmarkIcon = true
 				setTimeout(() => { this.showCheckmarkIcon = false }, 2000)
 			} else {
@@ -125,7 +120,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.displayname {
+.headline {
 	display: grid;
 	align-items: center;
 
@@ -143,7 +138,7 @@ export default {
 		cursor: text;
 	}
 
-	.displayname__actions-container {
+	.headline__actions-container {
 		grid-area: 1 / 1;
 		justify-self: flex-end;
 		height: 30px;

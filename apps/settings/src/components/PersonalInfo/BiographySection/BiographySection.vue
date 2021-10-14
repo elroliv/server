@@ -24,52 +24,48 @@
 	<section>
 		<HeaderBar
 			:account-property="accountProperty"
-			label-for="language" />
+			label-for="biography"
+			:scope.sync="primaryBiography.scope" />
 
-		<template v-if="isEditable">
-			<Language
-				:common-languages="commonLanguages"
-				:other-languages="otherLanguages"
-				:language.sync="language" />
-		</template>
+		<Biography
+			:biography.sync="primaryBiography.value"
+			:scope.sync="primaryBiography.scope" />
 
-		<span v-else>
-			{{ t('settings', 'No language set') }}
-		</span>
+		<VisibilityDropdown
+			:param-id="accountPropertyId"
+			:display-id="accountProperty"
+			:visibility.sync="visibility" />
 	</section>
 </template>
 
 <script>
 import { loadState } from '@nextcloud/initial-state'
 
-import Language from './Language'
+import Biography from './Biography'
 import HeaderBar from '../shared/HeaderBar'
+import VisibilityDropdown from '../shared/VisibilityDropdown'
 
-import { ACCOUNT_SETTING_PROPERTY_READABLE_ENUM } from '../../../constants/AccountPropertyConstants'
+import { ACCOUNT_PROPERTY_ENUM, ACCOUNT_PROPERTY_READABLE_ENUM } from '../../../constants/AccountPropertyConstants'
 
-const { languageMap: { activeLanguage, commonLanguages, otherLanguages } } = loadState('settings', 'personalInfoParameters', {})
+const { biographyMap: { primaryBiography } } = loadState('settings', 'personalInfoParameters', {})
+const { profileConfig: { biography: { visibility } } } = loadState('settings', 'profileParameters', {})
 
 export default {
-	name: 'LanguageSection',
+	name: 'BiographySection',
 
 	components: {
-		Language,
+		Biography,
 		HeaderBar,
+		VisibilityDropdown,
 	},
 
 	data() {
 		return {
-			accountProperty: ACCOUNT_SETTING_PROPERTY_READABLE_ENUM.LANGUAGE,
-			commonLanguages,
-			otherLanguages,
-			language: activeLanguage,
+			accountProperty: ACCOUNT_PROPERTY_READABLE_ENUM.BIOGRAPHY,
+			accountPropertyId: ACCOUNT_PROPERTY_ENUM.BIOGRAPHY,
+			primaryBiography,
+			visibility,
 		}
-	},
-
-	computed: {
-		isEditable() {
-			return Boolean(this.language)
-		},
 	},
 }
 </script>

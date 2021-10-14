@@ -21,18 +21,18 @@
 -->
 
 <template>
-	<div class="displayname">
-		<input
-			id="displayname"
-			type="text"
-			:placeholder="t('settings', 'Your full name')"
-			:value="displayName"
+	<div class="biography">
+		<textarea
+			id="biography"
+			:placeholder="t('settings', 'Your biography')"
+			:value="biography"
+			rows="8"
 			autocapitalize="none"
-			autocomplete="on"
+			autocomplete="off"
 			autocorrect="off"
-			@input="onDisplayNameChange">
+			@input="onBiographyChange" />
 
-		<div class="displayname__actions-container">
+		<div class="biography__actions-container">
 			<transition name="fade">
 				<span v-if="showCheckmarkIcon" class="icon-checkmark" />
 				<span v-else-if="showErrorIcon" class="icon-error" />
@@ -48,15 +48,12 @@ import debounce from 'debounce'
 
 import { ACCOUNT_PROPERTY_ENUM } from '../../../constants/AccountPropertyConstants'
 import { savePrimaryAccountProperty } from '../../../service/PersonalInfo/PersonalInfoService'
-import { validateStringInput } from '../../../utils/validate'
-
-// TODO Global avatar updating on events (e.g. updating the displayname) is currently being handled by global js, investigate using https://github.com/nextcloud/nextcloud-event-bus for global avatar updating
 
 export default {
-	name: 'DisplayName',
+	name: 'Biography',
 
 	props: {
-		displayName: {
+		biography: {
 			type: String,
 			required: true,
 		},
@@ -68,7 +65,7 @@ export default {
 
 	data() {
 		return {
-			initialDisplayName: this.displayName,
+			initialBiography: this.biography,
 			localScope: this.scope,
 			showCheckmarkIcon: false,
 			showErrorIcon: false,
@@ -76,37 +73,35 @@ export default {
 	},
 
 	methods: {
-		onDisplayNameChange(e) {
-			this.$emit('update:display-name', e.target.value)
-			this.debounceDisplayNameChange(e.target.value.trim())
+		onBiographyChange(e) {
+			this.$emit('update:biography', e.target.value)
+			this.debounceBiographyChange(e.target.value.trim())
 		},
 
-		debounceDisplayNameChange: debounce(async function(displayName) {
-			if (validateStringInput(displayName)) {
-				await this.updatePrimaryDisplayName(displayName)
-			}
+		debounceBiographyChange: debounce(async function(biography) {
+			await this.updatePrimaryBiography(biography)
 		}, 500),
 
-		async updatePrimaryDisplayName(displayName) {
+		async updatePrimaryBiography(biography) {
 			try {
-				const responseData = await savePrimaryAccountProperty(ACCOUNT_PROPERTY_ENUM.DISPLAYNAME, displayName)
+				const responseData = await savePrimaryAccountProperty(ACCOUNT_PROPERTY_ENUM.BIOGRAPHY, biography)
 				this.handleResponse({
-					displayName,
+					biography,
 					status: responseData.ocs?.meta?.status,
 				})
 			} catch (e) {
 				this.handleResponse({
-					errorMessage: t('settings', 'Unable to update full name'),
+					errorMessage: t('settings', 'Unable to update biography'),
 					error: e,
 				})
 			}
 		},
 
-		handleResponse({ displayName, status, errorMessage, error }) {
+		handleResponse({ biography, status, errorMessage, error }) {
 			if (status === 'ok') {
 				// Ensure that local state reflects server state
-				this.initialDisplayName = displayName
-				emit('settings:display-name:updated', displayName)
+				this.initialBiography = biography
+				emit('settings:biography:updated', biography)
 				this.showCheckmarkIcon = true
 				setTimeout(() => { this.showCheckmarkIcon = false }, 2000)
 			} else {
@@ -125,14 +120,14 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.displayname {
+.biography {
 	display: grid;
 	align-items: center;
 
-	input {
+	textarea {
+		resize: none;
 		grid-area: 1 / 1;
 		width: 100%;
-		height: 34px;
 		margin: 3px 3px 3px 0;
 		padding: 7px 6px;
 		color: var(--color-main-text);
@@ -141,16 +136,23 @@ export default {
 		background-color: var(--color-main-background);
 		font-family: var(--font-face);
 		cursor: text;
+
+		&:hover {
+			border-color: var(--color-primary-element) !important;
+			outline: none !important;
+		}
 	}
 
-	.displayname__actions-container {
+	.biography__actions-container {
 		grid-area: 1 / 1;
 		justify-self: flex-end;
+		align-self: flex-end;
 		height: 30px;
 
 		display: flex;
 		gap: 0 2px;
 		margin-right: 5px;
+		margin-bottom: 5px;
 
 		.icon-checkmark,
 		.icon-error {

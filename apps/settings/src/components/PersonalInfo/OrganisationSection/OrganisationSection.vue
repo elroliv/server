@@ -24,52 +24,48 @@
 	<section>
 		<HeaderBar
 			:account-property="accountProperty"
-			label-for="language" />
+			label-for="organisation"
+			:scope.sync="primaryOrganisation.scope" />
 
-		<template v-if="isEditable">
-			<Language
-				:common-languages="commonLanguages"
-				:other-languages="otherLanguages"
-				:language.sync="language" />
-		</template>
+		<Organisation
+			:organisation.sync="primaryOrganisation.value"
+			:scope.sync="primaryOrganisation.scope" />
 
-		<span v-else>
-			{{ t('settings', 'No language set') }}
-		</span>
+		<VisibilityDropdown
+			:param-id="accountPropertyId"
+			:display-id="accountProperty"
+			:visibility.sync="visibility" />
 	</section>
 </template>
 
 <script>
 import { loadState } from '@nextcloud/initial-state'
 
-import Language from './Language'
+import Organisation from './Organisation'
 import HeaderBar from '../shared/HeaderBar'
+import VisibilityDropdown from '../shared/VisibilityDropdown'
 
-import { ACCOUNT_SETTING_PROPERTY_READABLE_ENUM } from '../../../constants/AccountPropertyConstants'
+import { ACCOUNT_PROPERTY_ENUM, ACCOUNT_PROPERTY_READABLE_ENUM } from '../../../constants/AccountPropertyConstants'
 
-const { languageMap: { activeLanguage, commonLanguages, otherLanguages } } = loadState('settings', 'personalInfoParameters', {})
+const { organisationMap: { primaryOrganisation } } = loadState('settings', 'personalInfoParameters', {})
+const { profileConfig: { organisation: { visibility } } } = loadState('settings', 'profileParameters', {})
 
 export default {
-	name: 'LanguageSection',
+	name: 'OrganisationSection',
 
 	components: {
-		Language,
+		Organisation,
 		HeaderBar,
+		VisibilityDropdown,
 	},
 
 	data() {
 		return {
-			accountProperty: ACCOUNT_SETTING_PROPERTY_READABLE_ENUM.LANGUAGE,
-			commonLanguages,
-			otherLanguages,
-			language: activeLanguage,
+			accountProperty: ACCOUNT_PROPERTY_READABLE_ENUM.ORGANISATION,
+			accountPropertyId: ACCOUNT_PROPERTY_ENUM.ORGANISATION,
+			primaryOrganisation,
+			visibility,
 		}
-	},
-
-	computed: {
-		isEditable() {
-			return Boolean(this.language)
-		},
 	},
 }
 </script>
