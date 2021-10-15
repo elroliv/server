@@ -159,7 +159,8 @@ $getUserAvatar = static function (int $size) use ($_): string {
 			<?php }
 			if ($_['userAvatarSet']) {
 				$avatar32 = $getUserAvatar(32); ?> data-avatar="<?php p($avatar32); ?>"
-			<?php } ?>>
+			<?php
+			} ?>>
 							<?php
 							if ($_['userAvatarSet']) {?>
 								<img alt="" width="32" height="32"
